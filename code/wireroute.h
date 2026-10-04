@@ -15,11 +15,11 @@
 
 /** README(student):
  We provide a way to validate consistency between wire layout
- and occupancy. Within the program, a wire checker is provided 
+ and occupancy. Within the program, a wire checker is provided
  by:
  wr_checker Checker(wires, occupancy);
  and its validate() method can be called to validate the consistency.
- 
+
  The struct below is the standard format for wires used by the wire checker.
  It contains a buffer that holds up to MAX_PTS_PER_WIRE points, and a num_pts
  field that specifies the number of points. Regardless of what representation you use for your wires, you should
@@ -41,13 +41,13 @@ checked）： (1) two consecutive keypoints share at least same x or same y, (2)
 <= num_pts <= MAX_PTS_PER_WIRE.
 */
 struct validate_wire_t {
-  uint8_t num_pts;
-  struct {
-    uint16_t x;
-    uint16_t y;
-  } p[MAX_PTS_PER_WIRE];
-  validate_wire_t &cleanup(void);
-  void print_wire(void) const;
+    uint8_t num_pts;
+    struct {
+        uint16_t x;
+        uint16_t y;
+    } p[MAX_PTS_PER_WIRE];
+    validate_wire_t& cleanup(void);
+    void print_wire(void) const;
 };
 
 /* TODO (student): Define the data structure for wire here.
@@ -60,29 +60,27 @@ bend3_y; but this might not be the most efficient way to define the solution
 space for a wire with <= 3 bends.
 */
 struct Wire {
-  /* Define the data structure for wire here. */
-  int start_x, start_y, end_x, end_y, mid_x, mid_y;
-  bool move_x_start, move_x_end;
-  validate_wire_t to_validate_format(void) const;
+    /* Define the data structure for wire here. */
+    int start_x, start_y, end_x, end_y, mid_x, mid_y;
+    bool move_x_start, move_x_end;
+    validate_wire_t to_validate_format(void) const;
 };
 
 // Definition of the wire checker
 struct wr_checker {
-  std::vector<Wire> wires;
-  std::vector<std::vector<int>> occupancies;
-  const int nwires;
-  const int dim_x;
-  const int dim_y;
-  wr_checker(std::vector<Wire> &wires,
-             std::vector<std::vector<int>> &occupancies)
-      : wires(wires), occupancies(occupancies), nwires(wires.size()),
-        dim_x(occupancies[0].size()), dim_y(occupancies.size()) {}
-  void validate() const;
+    std::vector<Wire> wires;
+    std::vector<std::vector<int>> occupancies;
+    const int nwires;
+    const int dim_x;
+    const int dim_y;
+    wr_checker(std::vector<Wire>& wires, std::vector<std::vector<int>>& occupancies)
+        : wires(wires), occupancies(occupancies), nwires(wires.size()), dim_x(occupancies[0].size()),
+          dim_y(occupancies.size()) {}
+    void validate() const;
 };
 
-const char *get_option_string(const char *option_name,
-                              const char *default_value);
-int get_option_int(const char *option_name, int default_value);
-float get_option_float(const char *option_name, float default_value);
+const char* get_option_string(const char* option_name, const char* default_value);
+int get_option_int(const char* option_name, int default_value);
+float get_option_float(const char* option_name, float default_value);
 
 #endif
