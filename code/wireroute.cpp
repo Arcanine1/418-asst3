@@ -235,62 +235,46 @@ void parallelize_within_wires_single_iter(std::vector<Wire>& wires, std::vector<
     std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<double> real_dist(0.0, 1.0);
 
-    unsigned int number_possible_wires;
-    int min_cost;
-    int starting_cost;
+    for (auto& wire : wires) {
+        const unsigned int number_possible_wires = number_of_possible_wires(wire);
+        add_or_remove_wire_from_occupancy(wire, occupancy, false, false);
 
-    #pragma omp parallel num_threads(params.num_threads)
-    {
-        for (auto& wire : wires) {
-            #pragma omp single
-            {
-                number_possible_wires = number_of_possible_wires(wire);
-                add_or_remove_wire_from_occupancy(wire, occupancy, false, false);
+        // Simulated Annealing
+        if (real_dist(rng) < params.SA_prob) {
+            std::uniform_int_distribution<int> int_dist(0, number_possible_wires - 1);
+            const int wire_index = int_dist(rng);
+            get_ith_wire(wire, wire_index);
+            add_or_remove_wire_from_occupancy(wire, occupancy, true, false);
+            continue;
+        }
 
-                starting_cost = std::numeric_limits<int>::max();
-
-                // Simulated Annealing
-                if (real_dist(rng) < params.SA_prob) {
-                    std::uniform_int_distribution<int> int_dist(0, number_possible_wires - 1);
-                    const int wire_index = int_dist(rng);
-                    get_ith_wire(wire, wire_index);
-
-                    // Skip candidate search for this wire.
-                    number_possible_wires = 0;
-                } else {
-                    starting_cost = test_wire_addition_to_occupancy(wire, occupancy, std::numeric_limits<int>::max());
-                }
-
-                min_cost = starting_cost;
-            }
-
+        int min_cost = test_wire_addition_to_occupancy(wire, occupancy, std::numeric_limits<int>::max());
+        #pragma omp parallel num_threads(params.num_threads)
+        {
             int local_best_index = -1;
-            int local_best_cost = starting_cost;
+            int local_best_cost = min_cost;
             Wire temp_wire = wire;
 
-            #pragma omp for schedule(static)
+            #pragma omp for schedule(dynamic, 16) nowait
             for (unsigned int i = 0; i < number_possible_wires; i++) {
                 get_ith_wire(temp_wire, i);
-                int cost = test_wire_addition_to_occupancy(temp_wire, occupancy, local_best_cost);
-
+                // use local best cost for early pruning
+                int cost = test_wire_addition_to_occupancy(temp_wire, occupancy, std::numeric_limits<int>::max());
                 if (local_best_cost > cost) {
                     local_best_cost = cost;
                     local_best_index = i;
                 }
             }
 
-            if (local_best_index != -1 && local_best_cost < min_cost) {
-                min_cost = local_best_cost;
-                get_ith_wire(wire, local_best_index);
-            }
-
-            #pragma omp barrier
-
-            #pragma omp single
+            #pragma omp critical
             {
-                add_or_remove_wire_from_occupancy(wire, occupancy, true, false);
+                if (local_best_index != -1 && local_best_cost < min_cost) {
+                    min_cost = local_best_cost;
+                    get_ith_wire(wire, local_best_index);
+                }
             }
         }
+        add_or_remove_wire_from_occupancy(wire, occupancy, true, false);
     }
 }
 
