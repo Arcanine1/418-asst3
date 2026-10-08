@@ -255,11 +255,11 @@ void parallelize_within_wires_single_iter(std::vector<Wire>& wires, std::vector<
             int local_best_cost = min_cost;
             Wire temp_wire = wire;
 
-            #pragma omp for schedule(dynamic, 16) nowait
+            #pragma omp for schedule(static) nowait
             for (unsigned int i = 0; i < number_possible_wires; i++) {
                 get_ith_wire(temp_wire, i);
                 // use local best cost for early pruning
-                int cost = test_wire_addition_to_occupancy(temp_wire, occupancy, std::numeric_limits<int>::max());
+                int cost = test_wire_addition_to_occupancy(temp_wire, occupancy, local_best_cost);
                 if (local_best_cost > cost) {
                     local_best_cost = cost;
                     local_best_index = i;
