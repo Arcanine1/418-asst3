@@ -1,6 +1,6 @@
 /**
  * Parallel VLSI Wire Routing via OpenMP
- * Name 1(andrew_id 1), Name 2(andrew_id 2)
+ * ayushgar
  */
 
 #ifndef __WIREOPT_H__
@@ -29,7 +29,7 @@
 
 /* validate_wire_t is a format to represent wires by key points
 
-For example a wire with 3 bend has 5 key poinst:
+For example a wire with 3 bend has 5 key points:
 start, bend1, bend2, bend3, end.
 Notice this implies two consecutive keypoints share at least same x or same y
 
